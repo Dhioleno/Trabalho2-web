@@ -1,0 +1,168 @@
+import React, {Component} from 'react'
+import Main from '../template/main/Main'
+import axios from 'axios'
+
+const baseUrl = 'http://localhost:3001/users'
+
+const initialState = {// carrega lista
+    user:{name: '', dono: '', contato: ''},
+    list:[]
+}
+
+const headerProps = {
+    icon: 'users',
+    title: 'Consertos',
+    subtitle: 'Agendamento de Consertos: Incluir, Listar, Alterar e Excluir!'
+}
+
+export default class UserCrud extends Component{
+
+    state = {...initialState}
+
+    componentWillMount(){
+        axios(baseUrl).then(resp => {
+            this.setState({list: resp.data})
+        })
+    }
+
+    load(user){
+        this.setState({user})
+    }
+
+    remove(user){
+        axios.delete(`${baseUrl}/${user.id}`).then(resp => {
+            const list = this.state.list.filter(u => u !== user)
+            this.setState({list})
+        })
+    }
+
+    renderTable(){//tabela compoetes internos
+        return(
+            <table className='table mt-4'>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Dono</th>
+                        <th>Contato</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {this.renderRows()}
+                </tbody>
+            </table>
+        )
+    }
+
+    renderRows(){// pega os valores do banc de dados
+        return this.state.list.map(user => {
+            return(
+                <tr key={user.id}>
+                    <td>{user.id}</td>
+                    <td>{user.name}</td>
+                    <td>{user.dono}</td>
+                    <td>{user.contato}</td>
+                    <td>
+                        <button className='btn btn-warning'
+                            onClick={() => this.load(user)}>
+                            <i className="fa fa-pencil"></i>
+                        </button>
+                        <button className='btn btn-danger ml-2'
+                            onClick={() => this.remove(user)}>
+                            <i className="fa fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            )
+        })
+    }
+
+    clear(){
+        this.setState({user: initialState.user})
+    }//limpa os campos
+
+    save(){// adicionar /atualizar
+        const user = this.state.user
+        const method = user.id ? 'put' : 'post'// se tivere
+
+        const url = user.id ? `${baseUrl}/${user.id}` : baseUrl
+        axios[method](url, user)
+            .then(resp => {
+                const list = this.getUpdateList(resp.data)
+                this.setState({user: initialState.user, list})//atualiza a lista
+            })
+    }
+
+    getUpdateList(user){
+        const list = this.state.list.filter(u => u.id !== user.id)
+        list.unshift(user)
+        return list//lista de usuarios com usuario no topo
+    }
+
+    updateField(event){//atualizar user
+        const user = {...this.state.user}
+        user[event.target.name] = event.target.value
+        this.setState({user})
+    }
+
+    renderForm(){// lista
+        return(
+            <div className='form'>
+                <div className='row'>
+                    <div className='col-12 col-md-6'>
+                        <div className='form-group'>
+                            <label>Nome</label>
+                            <input type='text' className='form-control'
+                                name='name'
+                                value={this.state.user.name}
+                                onChange={e => this.updateField(e)}
+                                placeholder='Digite o nome/marca do dispositivo...'/>
+                        </div>
+                    </div>
+                    <div className='col-12 col-md-6'>
+                        <div className='form-group'>
+                            <label>Dono</label>
+                            <input type='text' className='form-control'
+                                name='dono'
+                                value={this.state.user.dono}
+                                onChange={e => this.updateField(e)}
+                                placeholder='Digite o nome do dono do dispositivo...'/>
+                        </div>
+                    </div>
+                    <div className='col-12 col-md-6'>
+                        <div className='form-group'>
+                            <label>Contato</label>
+                            <input type='tel' className='form-control'
+                                name='contato'
+                                value={this.state.user.contato}
+                                onChange={e => this.updateField(e)}
+                                placeholder='Digite o número de contato...'/>
+                        </div>
+                    </div>
+                </div>
+                <hr/>
+                <div className="row">
+                    <div className="col-12 d-flex justify-content-end">
+                        <button className='btn btn-primary'
+                            onClick={e => this.save(e)}>
+                            Salvar
+                        </button>
+                        <button className='btn btn-secondary ml-2'
+                            onClick={e => this.clear(e)}>
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )
+    }// botoes
+
+    render(){
+        return(
+            <Main {...headerProps}>
+                {this.renderForm()}
+                {this.renderTable()}
+            </Main>
+        )
+    }
+}

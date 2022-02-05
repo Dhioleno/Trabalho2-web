@@ -1,0 +1,11 @@
+{
+    "users":[{
+        "id": 1,
+        "name": "Moisés Oliveira",
+        "email": "moisesocosta@alu.ufc.br"
+    },{
+        "id": 2,
+        "name": "Robério Girão",
+        "email": "bananao21cm@gmail.com"
+    }]
+}
